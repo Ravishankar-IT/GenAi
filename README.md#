@@ -3,4 +3,21 @@
 ## Overview
 This repository showcases my hands-on learning and implementation of **Generative AI systems**, with a strong focus on **Large Language Models (LLMs)**, prompt engineering, and real-world application development. It reflects my ability to work with GenAI APIs, design effective prompts, and integrate AI-driven features into scalable software solutions.
 
+## Technical Focus Areas
+- Architecture and working principles of **Large Language Models (LLMs)**
+- Prompt engineering techniques (zero-shot, few-shot, chain-of-thought)
+- Text generation, summarization, classification, and conversational AI
+- API-based interaction with Generative AI models
+- Response optimization, validation, and error handling
+- Responsible AI usage and basic safety considerations
 
+## Tech Stack
+- **Languages:** JavaScript, Python  
+- **AI/ML:** LLM-based Generative AI models  
+- **Frameworks & Tools:**
+  - Node.js / Python runtime
+  - REST APIs for model integration
+  - Environment configuration (dotenv, API keys)
+- **Version Control:** Git & GitHub
+
+## Repository Structure
