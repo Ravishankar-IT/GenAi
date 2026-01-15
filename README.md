@@ -1,7 +1,10 @@
 # Generative AI Engineering – Learning & Implementation
 
+I Am using Gimini API DOCUMENTATION.
+
 ## Overview
 This repository showcases my hands-on learning and implementation of **Generative AI systems**.
+
 
 ## Technical Focus Areas
 - Large Language Models (LLMs)
@@ -9,11 +12,8 @@ This repository showcases my hands-on learning and implementation of **Generativ
 - API Integration
 
 ## Tech Stack
-- JavaScript
-- Python
-- Node.js
+- JavaScript  (Currently)
+- Latter I will Add More.
 
-## Repository Structure
-/basics  
-/prompts  
-/projects  
+
+ 
