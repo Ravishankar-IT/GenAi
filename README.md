@@ -1,4 +1,3 @@
-```md
 # Generative AI Engineering – Learning & Implementation
 
 ## Overview
@@ -18,4 +17,3 @@ This repository showcases my hands-on learning and implementation of **Generativ
 /basics  
 /prompts  
 /projects  
-
