@@ -1,85 +1,147 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import {exec} from "child_process";
+import { GoogleGenAI } from "@google/genai";
 import readlineSync from 'readline-sync';
-import 'dotenv/config'
-import util from "util";
-import os from 'os';
+import { exec } from "child_process";
+import { promisify } from "util";
+import fs from 'fs';
 
-const platform = os.platform();
+const asyncExecute = promisify(exec);
+const writeFileAsync = promisify(fs.writeFile);
 
-const execute = util.promisify(exec);
+const History = [];
+const ai = new GoogleGenAI({ apiKey: "Your Gen ai api key" });
 
-// Configure the client
-const genAI = new GoogleGenerativeAI(process.env.GIMINI_API_KEY);
+async function executeCommand({ command, content, filePath }) {
+    try {
+        if (content && filePath) {
+             await writeFileAsync(filePath, content);
+            return `Success: File created at ${filePath}`;
+        } else if (command) {
+            // Execute regular command
+            const { stdout, stderr } = await asyncExecute(command);
+            if (stderr) {
+                return `Error: ${stderr}`;
+            }
+            return `Success: ${stdout || 'Command executed successfully'}`;
+        }
+        return 'Error: No command or content provided';
+    } catch (error) {
+        return `Error: ${error.message}`;
+    }
+}
 
-const commandExecuter = {
-    name:"executeCommand",
-    description: "It takes any shell/terminal command and execute it. It will help us to create, read, write, update, delete any folder and file",
-    parameters:{
-        type: "object",
-        properties:{
-            command:{
-                type:"string",
-                description: "It is the terminal/shell command. Ex: mkdir calculator , touch calculator/index.js etc"
+const executeCommandDeclaration = {
+    name: "executeCommand",
+    description: "Execute commands or create files with content on Windows systems",
+    parameters: {
+        type: 'OBJECT',
+        properties: {
+            command: {
+                type: 'STRING',
+                description: 'A Windows terminal command (e.g., "mkdir my-project")'
+            },
+            content: {
+                type: 'STRING',
+                description: 'Complete file content to write (for HTML/CSS/JS files)'
+            },
+            filePath: {
+                type: 'STRING',
+                description: 'Path where file should be created (e.g., "my-project/index.html")'
             }
         },
-        required:['command']
     }
 }
 
-const model = genAI.getGenerativeModel({ 
-    model: "gemini-pro", 
-    tools: [{ functionDeclarations: [commandExecuter] }]
-});
-
-const chat = model.startChat();
-
-
-
-// tool: 
-
-async function executeCommand({command}){
-    
-    try{
-    const {stdout,stderr}   = await execute(command);
-     
-    if(stderr){
-        return `Error: ${stderr}`
-    }
-
-    return `Success: ${stdout}`
-
-    }
-    catch(err){
-        return `Error: ${err}`
-    }
+const availableTools = {
+    executeCommand
 }
 
+async function runAgent(userProblem) {
+    History.push({
+        role: 'user',
+        parts: [{ text: userProblem }]
+    });
 
-while(true){
+    while (true) {
+        try {
+            const response = await ai.models.generateContent({
+                model: "gemini-2.5-flash",
+                contents: History,
+                config: {
+                    systemInstruction: `You are an expert Website builder. Follow these steps:
+                    
+                    1. FIRST create the project folder: mkdir project-name
+                    2. THEN create files with COMPLETE TEMPLATES:
+                       - index.html (with basic HTML5 structure)
+                       - style.css (with basic styles)
+                       - script.js (with basic functionality)
+                    
+                    IMPORTANT:
+                    - Use the 'content' parameter to send COMPLETE file content
+                    - Always include the 'filePath' parameter when writing files
+                    - For folders, use the 'command' parameter with mkdir
+                    - Include proper DOCTYPE, meta tags, and semantic HTML
+                    - Include responsive CSS (viewport meta, flexible units)
+                    - Include DOMContentLoaded event in JavaScript
+                    
+                    EXAMPLE for a calculator:
+                    1. {command: "mkdir calculator"}
+                    2. {content: "<!DOCTYPE html>...", filePath: "calculator/index.html"}
+                    3. {content: "body { font-family: Arial...}", filePath: "calculator/style.css"}
+                    4. {content: "document.addEventListener...", filePath: "calculator/script.js"}`,
+                    tools: [{
+                        functionDeclarations: [executeCommandDeclaration]
+                    }],
+                },
+            });
 
-    const question = readlineSync.question("Ask me anything --> ");
+            if (response.functionCalls && response.functionCalls.length > 0) {
+                const { name, args } = response.functionCalls[0];
+                
+                if (args.content && args.filePath) {
+                    console.log(`Creating file: ${args.filePath}`);
+                } else if (args.command) {
+                    console.log(`Executing command: ${args.command}`);
+                }
 
-    if(question == 'exit'){
-        break;
-    }
+                const result = await availableTools[name](args);
+                console.log(`Result: ${result}`);
 
-    const result = await chat.sendMessage(question);
+                History.push({
+                    role: "model",
+                    parts: [{
+                        functionCall: response.functionCalls[0],
+                    }],
+                });
 
-    if (result.response.functionCalls && result.response.functionCalls.length > 0) {
-
-        for (const functionCall of result.response.functionCalls) {
-
-            const toolResponse = await executeCommand(functionCall.args);
-
-            await chat.sendMessage([{ functionResponse: { name: functionCall.name, response: toolResponse } }]);
-
+                History.push({
+                    role: "user",
+                    parts: [{
+                        functionResponse: {
+                            name: name,
+                            response: { result },
+                        },
+                    }],
+                });
+            } else {
+                History.push({
+                    role: 'model',
+                    parts: [{ text: response.text }]
+                });
+                console.log(response.text);
+                break;
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            break;
         }
-
-    } else {
-
-        console.log(result.response.text());
-
     }
-
 }
+
+async function main() {
+    console.log("🚀 Website Builder - Describe the website you want to create");
+    const userProblem = readlineSync.question("Your idea: ");
+    await runAgent(userProblem);
+    main();
+}
+
+main();

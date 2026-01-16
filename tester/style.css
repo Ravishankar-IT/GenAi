@@ -1,0 +1,38 @@
+/* Duplicate styles */
+body {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial;
+    background: white;
+}
+
+/* Invalid property */
+.header {
+    display: flex;
+    wrong-property: value;
+}
+
+/* Inefficient selector */
+div div div a {
+    color: blue;
+}
+
+/* Missing vendor prefixes */
+.box {
+    transform: rotate(45deg);
+    transition: all 0.3s;
+}
+
+/* Unused style */
+.never-used-class {
+    color: red;
+}
+
+/* Color contrast issue */
+.low-contrast {
+    background: #eee;
+    color: #ddd;
+}
