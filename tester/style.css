@@ -13,11 +13,13 @@ body {
 .header {
     display: flex;
     wrong-property: value;
+    color: blue;
 }
 
 /* Inefficient selector */
 div div div a {
-    color: blue;
+    background-color: purple;
+background text
 }
 
 /* Missing vendor prefixes */
